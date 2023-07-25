@@ -1,14 +1,21 @@
 package com.example.springdemo.service;
 
+import com.example.springdemo.helper.Exceptions;
 import com.example.springdemo.model.User;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class UserService {
 
-    List<User> users = List.of(new User(1, "John", "Doe", "johndoe@gmail.com", "Admin", "azx123"));
+    List<User> users = new ArrayList<>();
+
+    public UserService() {
+        users.add(new User(1, "John", "Doe", "johndoe@gmail.com", "Admin", "azx123"));
+    }
 
     public List<User> getAll() {
         return users;
@@ -25,7 +32,11 @@ public class UserService {
     }
 
     public User create(User user) {
-        users.add(user);
+        if(user != null) {
+            users.add(user);
+        }else {
+            throw new Exceptions.InvalidInputException(HttpStatusCode.valueOf(402), "Please enter all fields");
+        }
         return user;
     }
 
