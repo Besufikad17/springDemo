@@ -1,60 +1,48 @@
 package com.example.springdemo.service;
 
+import ch.qos.logback.classic.spi.IThrowableProxy;
 import com.example.springdemo.helper.Exceptions;
 import com.example.springdemo.model.User;
-import org.springframework.http.HttpStatusCode;
+import com.example.springdemo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class UserService {
 
-    List<User> users = new ArrayList<>();
-
-    public UserService() {
-        users.add(new User(1, "John", "Doe", "johndoe@gmail.com", "Admin", "azx123"));
+    private UserRepository userRepository;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     public List<User> getAll() {
-        return users;
+        return userRepository.findAll();
     }
 
-    public User get(int id) {
-        User user = null;
-        for(User u: users) {
-            if(u.getId() == id) {
-                user = u;
-            }
+    public User get(Long id) throws Exceptions.UserNotFoundException {
+       return userRepository.findById(id).orElseThrow(() -> new Exceptions.UserNotFoundException("User not found!!"));
+    }
+
+    public User create(User user) throws Exceptions.UserExistsException {
+        if(userRepository.findByEmail(user.getEmail()).isPresent()){
+            throw new Exceptions.UserExistsException("User already exists!!");
         }
-        return user;
+        return userRepository.save(user);
     }
 
-    public User create(User user) {
-        if(user != null) {
-            users.add(user);
+    public User edit(Long id, User user) throws Exceptions.UserNotFoundException {
+        if(userRepository.existsById(id)){
+            userRepository.edit(user.getFname(), user.getLname(), user.getEmail(), user.getRole(), id);
+            return userRepository.findById(id).orElseThrow(
+                    () -> new Exceptions.UserNotFoundException("User not found!!"));
         }else {
-            throw new Exceptions.InvalidInputException(HttpStatusCode.valueOf(402), "Please enter all fields");
+            throw new Exceptions.UserNotFoundException("User not found!!");
         }
-        return user;
     }
 
-    public User edit(int id, User user) {
-        for(User u: users) {
-            if(u.getId() == id) {
-               users.remove(u);
-               users.add(user);
-            }
-        }
-        return user;
+    public void delete(Long id) {
+      userRepository.deleteById(id);
     }
 
-    public void delete(int id) {
-        for(User u: users) {
-            if(u.getId() == id) {
-                users.remove(u);
-            }
-        }
-    }
 }

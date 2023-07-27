@@ -1,11 +1,20 @@
 package com.example.springdemo.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
+
+import static jakarta.persistence.GenerationType.SEQUENCE;
+
+@Entity
+@Table(name = "user")
 public class User {
 
-
-  private int id;
+  @Id
+  @GeneratedValue(strategy = SEQUENCE)
+  private Long id;
 
   @NotBlank(message = "fname is required")
   private String fname;
@@ -22,9 +31,13 @@ public class User {
   @NotBlank(message = "password is required")
   private String password;
 
+  @Column(insertable = false, updatable = false)
+  @CreationTimestamp
+  private LocalDateTime createdAt;
+
   public User() {}
 
-  public User(int id, String fname, String lname, String email, String role, String password) {
+  public User(Long id, String fname, String lname, String email, String role, String password) {
     this.id = id;
     this.fname = fname;
     this.lname = lname;
@@ -33,11 +46,11 @@ public class User {
     this.password = password;
   }
 
-  public int getId() {
+  public Long getId() {
     return id;
   }
 
-  public void setId(int id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
@@ -80,4 +93,5 @@ public class User {
   public void setRole(String role) {
     this.role = role;
   }
+
 }
