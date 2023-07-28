@@ -1,6 +1,5 @@
 package com.example.springdemo.service;
 
-import ch.qos.logback.classic.spi.IThrowableProxy;
 import com.example.springdemo.helper.Exceptions;
 import com.example.springdemo.model.User;
 import com.example.springdemo.repository.UserRepository;
@@ -33,7 +32,7 @@ public class UserService {
 
     public User edit(Long id, User user) throws Exceptions.UserNotFoundException {
         if(userRepository.existsById(id)){
-            userRepository.edit(user.getFname(), user.getLname(), user.getEmail(), user.getRole(), id);
+            userRepository.edit(user.getFname(), user.getLname(), user.getEmail(), String.valueOf(user.getRole()), id);
             return userRepository.findById(id).orElseThrow(
                     () -> new Exceptions.UserNotFoundException("User not found!!"));
         }else {

@@ -2,13 +2,19 @@ package com.example.springdemo.web;
 
 import com.example.springdemo.helper.Exceptions;
 import com.example.springdemo.model.User;
+import com.example.springdemo.repository.UserRepository;
 import com.example.springdemo.service.BCryptService;
+import com.example.springdemo.service.JwtService;
 import com.example.springdemo.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -16,26 +22,53 @@ import java.util.List;
 public class UserController {
 
     private final UserService service;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
 
-    private final BCryptService bCryptService;
-    public UserController(UserService userService, BCryptService bCryptService) {
+    public UserController(UserService userService, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, UserRepository userRepository) {
         this.service = userService;
-        this.bCryptService = bCryptService;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+        this.userRepository = userRepository;
     }
 
-    @PostMapping("/signup")
+    @PostMapping("/auth/signup")
     public ResponseEntity<Object> signup(@Valid @RequestBody User user) {
-        user.setPassword(bCryptService.hash(user.getPassword()));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        String token = jwtService.generateToken(user);
+        HashMap<String, Object> response = new HashMap<>();
         try {
-            return new ResponseEntity<>(service.create(user), HttpStatus.OK);
+            response.put("user", service.create(user));
+            response.put("token", token);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exceptions.UserExistsException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
-    @PostMapping("/login")
-    public User login(@Valid @RequestBody LoginInformation loginInformation) {
-        return null;
+    @PostMapping("/auth/login")
+    public ResponseEntity<Object> login(@Valid @RequestBody LoginInformation loginInformation) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginInformation.getEmail(),
+                        loginInformation.getPassword()
+                )
+        );
+
+        HashMap<String, Object> response = new HashMap<>();
+        try {
+            User user = userRepository.findByEmail(loginInformation.getEmail())
+                    .orElseThrow(() -> new Exceptions.UserNotFoundException("User not found!!"));
+            String token = jwtService.generateToken(user);
+            response.put("user", user);
+            response.put("token", token);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exceptions.UserNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("/users")
@@ -69,5 +102,13 @@ public class UserController {
     static class LoginInformation {
         private String email;
         private String password;
+
+        public String getEmail() {
+            return email;
+        }
+
+        public String getPassword() {
+            return password;
+        }
     }
 }
