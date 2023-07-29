@@ -3,7 +3,6 @@ package com.example.springdemo.web;
 import com.example.springdemo.helper.Exceptions;
 import com.example.springdemo.model.User;
 import com.example.springdemo.repository.UserRepository;
-import com.example.springdemo.service.BCryptService;
 import com.example.springdemo.service.JwtService;
 import com.example.springdemo.service.UserService;
 import jakarta.validation.Valid;

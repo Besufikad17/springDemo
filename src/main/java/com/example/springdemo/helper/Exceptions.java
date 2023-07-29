@@ -27,4 +27,10 @@ public class Exceptions extends Exception {
             super(reason);
         }
     }
+
+    public static class UnAuthorizedException extends Exception {
+        public UnAuthorizedException(String message) {
+            super(message);
+        }
+    }
 }
