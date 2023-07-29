@@ -49,9 +49,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
                 if (jwtService.isTokenValid(jwt, userDetails)) {
-                    if(request.getRequestURI().equals("/users") || request.getRequestURI().startsWith("/user") || request.getRequestURI().startsWith("/remove")) {
-                        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new Exceptions.UserNotFoundException("User not found!!"));
-                        log.info("Checking if {} role is {}", user.getEmail(), user.getRole().toString());
+                    User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new Exceptions.UserNotFoundException("User not found!!"));
+                    if(request.getRequestURI().equals("/api/users") || request.getRequestURI().startsWith("/api/user") || request.getRequestURI().startsWith("/api/remove")) {
                         if(user.getRole().toString().equals("ADMIN")) {
                             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                     userDetails,
